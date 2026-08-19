@@ -126,14 +126,21 @@ def register(app: dash.Dash) -> None:
         if not n_clicks or not session_id or not uploaded_files:
             raise PreventUpdate
 
-        # Build ImportOp params from uploaded file metadata
+        # When multiple files are uploaded without explicit conditions, cytoflow
+        # requires each tube to have a distinct condition dict.  Auto-assign a
+        # "Tube" condition using the original filename so the import succeeds.
+        # Phase 3 will replace this with a proper per-tube condition assignment UI.
+        needs_auto_condition = len(uploaded_files) > 1
         tubes = [
-            {"file": f["server_path"], "conditions": {}}
+            {
+                "file": f["server_path"],
+                "conditions": {"Tube": f["original_name"]} if needs_auto_condition else {},
+            }
             for f in uploaded_files
         ]
         params = {
             "tubes": tubes,
-            "conditions": {},
+            "conditions": {"Tube": "category"} if needs_auto_condition else {},
         }
 
         try:
