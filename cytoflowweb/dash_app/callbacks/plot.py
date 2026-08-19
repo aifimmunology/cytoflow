@@ -17,7 +17,9 @@ import dash
 from dash import Input, Output, State, ctx, no_update
 from dash.exceptions import PreventUpdate
 
-API_BASE = "http://localhost:8000/api"
+from cytoflowweb import config
+
+API_BASE = config.API_BASE
 
 
 def _api(method: str, path: str, **kwargs):

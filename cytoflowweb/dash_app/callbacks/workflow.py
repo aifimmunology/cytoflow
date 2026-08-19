@@ -23,12 +23,9 @@ import dash_bootstrap_components as dbc
 from dash import html
 
 from cytoflowweb.dash_app.layout.sidebar import make_step_card
+from cytoflowweb import config
 
-# Base URL for calling the FastAPI backend from server-side callbacks.
-# When Dash and FastAPI are co-located (WSGIMiddleware), we can call
-# the FastAPI functions directly.  We use HTTP here so the Dash and API
-# layers remain cleanly separated.
-API_BASE = "http://localhost:8000/api"
+API_BASE = config.API_BASE
 
 
 def _api(method: str, path: str, **kwargs):

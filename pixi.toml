@@ -1,0 +1,83 @@
+[project]
+name = "cytoflow"
+description = "Python tools for quantitative, reproducible flow cytometry analysis"
+version = "0.1.0"
+channels = ["conda-forge", "cytoflow"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+
+# ── Shared scientific core (used by both gui and web environments) ────────────
+[dependencies]
+python       = "3.12.*"
+numpy        = "2.2.*"
+pandas       = "2.3.*"
+scipy        = "1.16.*"
+scikit-learn = "1.7.*"
+seaborn      = "0.13.*"
+statsmodels  = "0.14.*"
+bottleneck   = "1.4.*"
+numexpr      = "2.11.*"
+numba        = "0.61.*"
+opentsne     = "1.0.*"
+igraph       = "0.10.*"
+python-igraph = "0.11.*"
+scikit-fda   = "0.10.*"
+natsort      = "8.4.*"
+# version 2.2.1 of gmpy2 crashes — pin to 2.1.5
+gmpy2        = "==2.1.5"
+libffi       = "*"
+
+# Traits-based data model (needed by IOperation / Experiment / .flow files)
+traits       = "7.0.*"
+# .flow YAML serialization format
+camel        = { version = "0.1.*", channel = "cytoflow" }
+
+nbformat        = "5.10.*"
+python-dateutil = "2.9.*"
+importlib_resources = "6.4.*"
+setuptools   = "80.*"
+swig         = "*"          # Logicle C++ extension build tool
+pip          = "*"
+
+# ── GUI feature — Qt5 desktop application (cytoflowgui) ──────────────────────
+[feature.gui.dependencies]
+matplotlib        = "3.10.*"
+qt                = "5.*"
+pyqt              = "5.*"
+pyqtwebengine     = "5.*"
+traitsui          = "8.0.*"
+pyface            = "8.0.*"
+envisage          = "7.0.*"
+configobj         = "5.0.*"
+yapf              = "0.40.*"
+ipympl            = "*"
+jupyterlab        = "*"
+
+# ── Web feature — FastAPI back end + Dash/Plotly front end (cytoflowweb) ─────
+[feature.web.dependencies]
+# matplotlib is kept for backward-compatible IView.plot() and Jupyter use
+matplotlib = "3.10.*"
+
+[feature.web.pypi-dependencies]
+fastapi              = ">=0.115"
+uvicorn              = { version = ">=0.30", extras = ["standard"] }
+python-multipart     = ">=0.0.9"
+httpx                = ">=0.27"
+dash                 = ">=2.17"
+dash-bootstrap-components = ">=1.6"
+dash-extensions      = ">=1.0"
+plotly               = ">=5.22"
+
+# ── Tasks ─────────────────────────────────────────────────────────────────────
+[feature.web.tasks]
+start = "python -m cytoflowweb"
+dev   = "uvicorn cytoflowweb.api.main:app --reload --host 0.0.0.0 --port 8000"
+
+[feature.gui.tasks]
+start = "python -m cytoflowgui.run"
+
+# ── Environments ──────────────────────────────────────────────────────────────
+[environments]
+# default: full desktop GUI environment (mirrors environment.yml)
+default = { features = ["gui"], solve-group = "gui" }
+# web: browser-native front end (no Qt dependency)
+web     = { features = ["web"], solve-group = "web" }

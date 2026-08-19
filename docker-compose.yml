@@ -1,0 +1,75 @@
+# ── cytoflowweb docker compose ────────────────────────────────────────────────
+#
+# Manages the cytoflowweb server container.
+#
+# Usage:
+#   docker compose up --build          # first run / after dependency changes
+#   docker compose up -d               # start in background
+#   docker compose down                # stop and remove containers
+#   docker compose logs -f web         # follow logs
+#
+# The application is available at http://localhost:8000 once healthy.
+#
+# Configuration:
+#   Copy .env.example to .env and adjust values, or set environment variables
+#   directly in the `environment:` block below.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cytoflowweb:latest
+
+    ports:
+      # HOST_PORT:CONTAINER_PORT — change the left side to use a different host port
+      - "${CYTOFLOWWEB_HOST_PORT:-8000}:8000"
+
+    environment:
+      # Server binding — always 0.0.0.0 inside the container
+      CYTOFLOWWEB_HOST: "0.0.0.0"
+      CYTOFLOWWEB_PORT: "8000"
+
+      # Dash callbacks call FastAPI via localhost inside the container
+      CYTOFLOWWEB_API_BASE: "http://localhost:8000/api"
+
+      # FCS upload storage — maps to the named volume below
+      CYTOFLOWWEB_UPLOAD_ROOT: "/data/uploads"
+
+      # In-memory session LRU cap
+      CYTOFLOWWEB_MAX_SESSIONS: "${CYTOFLOWWEB_MAX_SESSIONS:-50}"
+
+      # uvicorn log level: debug | info | warning | error | critical
+      CYTOFLOWWEB_LOG_LEVEL: "${CYTOFLOWWEB_LOG_LEVEL:-info}"
+
+    volumes:
+      # Named volume: FCS files persist across container restarts
+      - fcs_uploads:/data/uploads
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+    # Resource limits — tune for your server
+    deploy:
+      resources:
+        limits:
+          # Allow substantial memory for large FCS datasets and in-memory sessions
+          memory: 8g
+        reservations:
+          memory: 512m
+
+# ── Named volumes ─────────────────────────────────────────────────────────────
+volumes:
+  fcs_uploads:
+    driver: local
+    # To use a host-path mount instead of a Docker-managed volume, replace with:
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: /path/on/host/fcs_uploads

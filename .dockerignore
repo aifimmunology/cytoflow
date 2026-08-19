@@ -1,0 +1,58 @@
+# ── .dockerignore ─────────────────────────────────────────────────────────────
+# Keeps the build context lean — excludes anything not needed inside the image.
+
+# Version control
+.git
+.gitmodules
+.gitignore
+
+# pixi local environment (rebuilt inside the image)
+.pixi/
+
+# Python build artefacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# C extension build artefacts (rebuilt inside the image)
+*.so
+*.pyd
+cytoflow/utility/logicle_ext/_Logicle*.so
+cytoflow/utility/logicle_ext/_Logicle*.pyd
+
+# Test / CI
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Documentation
+docs/
+*.rst
+*.md
+!README.md
+
+# IDE / OS artefacts
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Legacy conda environment files (replaced by pixi.toml)
+environment.yml
+environment-web.yml
+
+# Jupyter / notebook artefacts
+.ipynb_checkpoints/
+*.ipynb
+
+# Package build / distribution
+package/
+MANIFEST

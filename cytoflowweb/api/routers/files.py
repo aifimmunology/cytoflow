@@ -22,16 +22,13 @@ from fastapi import APIRouter, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from cytoflowweb.api.models import session_manager
+from cytoflowweb import config
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/sessions/{session_id}/files", tags=["files"])
 
-# Top-level temp directory for uploaded FCS files.
-# In a containerised deployment this should be a mounted volume so files
-# survive for the lifetime of the session.
-_UPLOAD_ROOT = Path(tempfile.gettempdir()) / "cytoflowweb_uploads"
-_UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+_UPLOAD_ROOT = config.UPLOAD_ROOT
 
 
 # ── Response models ───────────────────────────────────────────────────────────

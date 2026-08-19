@@ -20,6 +20,7 @@ from starlette.middleware.wsgi import WSGIMiddleware
 
 from cytoflowweb.api.workers.executor import init_executor, shutdown_executor
 from cytoflowweb.api.routers import sessions, workflow, operations, files, views
+from cytoflowweb import config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -63,6 +64,11 @@ def create_app() -> FastAPI:
     app.include_router(operations.router, prefix=api_prefix)
     app.include_router(files.router,      prefix=api_prefix)
     app.include_router(views.router,      prefix=api_prefix)
+
+    # ── Health check ──────────────────────────────────────────────────────────
+    @app.get("/api/health", tags=["health"])
+    def health() -> dict:
+        return {"status": "ok"}
 
     # ── Mount the Dash WSGI app at root ───────────────────────────────────────
     # Import here to avoid circular imports at module load time

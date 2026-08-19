@@ -198,5 +198,7 @@ class SessionManager:
             return len(self._sessions)
 
 
+from cytoflowweb import config
+
 # ── Module-level singleton used by FastAPI dependency injection ───────────────
-session_manager = SessionManager()
+session_manager = SessionManager(max_sessions=config.MAX_SESSIONS)
