@@ -52,10 +52,23 @@ def _session_upload_dir(session_id: str) -> Path:
 
 def _parse_fcs_metadata(path: str) -> dict[str, Any]:
     """Extract channel names, event count, and text segment from an FCS file."""
-    from fcsparser import fcsparser as fp
-    meta, _ = fp.parse(path, reformat_meta=True, data_set=0)
-    channels = [meta["_channel_names_"][i] for i in range(int(meta.get("$PAR", 0)))]
-    event_count = int(meta.get("$TOT", 0))
+    try:
+        # Historical submodule layout used by this repository.
+        from fcsparser import fcsparser as fp
+    except ImportError:
+        # PyPI layout.
+        import fcsparser as fp
+
+    meta, data = fp.parse(path, reformat_meta=True, data_set=0)
+
+    # Be tolerant of minor metadata shape differences between parser versions.
+    channel_names = meta.get("_channel_names_", [])
+    if channel_names:
+        channels = [str(x) for x in channel_names]
+    else:
+        channels = [str(x) for x in list(data.columns)]
+
+    event_count = int(meta.get("$TOT", len(data)))
     # Return a subset of text metadata relevant for UI display
     text_keys = {k: v for k, v in meta.items() if not k.startswith("_")}
     return {"channels": channels, "event_count": event_count, "text_metadata": text_keys}

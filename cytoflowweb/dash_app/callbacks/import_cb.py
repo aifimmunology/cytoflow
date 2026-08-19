@@ -44,6 +44,17 @@ def _api_upload(path: str, filename: str, content_bytes: bytes):
     return resp.json()
 
 
+def _format_http_error(exc: Exception) -> str:
+    if isinstance(exc, httpx.HTTPStatusError):
+        try:
+            payload = exc.response.json()
+            detail = payload.get("detail", exc.response.text)
+        except Exception:
+            detail = exc.response.text
+        return f"{exc.response.status_code}: {detail}"
+    return str(exc)
+
+
 def register(app: dash.Dash) -> None:
 
     # ── Handle FCS file uploads ───────────────────────────────────────────────
@@ -84,7 +95,7 @@ def register(app: dash.Dash) -> None:
                     "event_count": meta["event_count"],
                 })
             except Exception as exc:
-                errors.append(f"{filename}: {exc}")
+                errors.append(f"{filename}: {_format_http_error(exc)}")
 
         status_msg = []
         if errors:
