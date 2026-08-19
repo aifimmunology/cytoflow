@@ -13,11 +13,14 @@ POST   /sessions/{id}/workflow/steps/{n}/estimate — run estimate()
 from __future__ import annotations
 
 import importlib
+import inspect
 import logging
+import re
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
+from traits.api import HasTraits, TraitError
 
 from cytoflowweb.api.models import session_manager, WorkflowStep, StepStatus
 from cytoflowweb.api.workers.tasks import apply_step_async, estimate_step_async
@@ -87,10 +90,44 @@ def _require_step(state, step_index: int):
     return state.steps[step_index]
 
 
+def _coerce_value(operation, key: str, value: Any) -> Any:
+    """Coerce a list of plain dicts to the appropriate List(HasTraits) type.
+
+    Traits raises a descriptive ``TraitError`` when you try to assign a dict
+    where a HasTraits subclass instance is expected.  We parse the error to
+    discover the expected class name, resolve it in the operation's module, and
+    reconstruct each item.  This makes the JSON API transparent for simple
+    nested objects like ``ImportOp.tubes``.
+    """
+    if not isinstance(value, list) or not value or not all(isinstance(v, dict) for v in value):
+        return value
+
+    # Probe with a single-item list to get the traits error message
+    try:
+        setattr(operation, key, [value[0]])
+        # Setting a dict succeeded — traits accepted it, return as-is
+        setattr(operation, key, [])  # reset to avoid side-effects
+        return value
+    except TraitError as te:
+        # e.g. "… must be a Tube or None, but a value of {…} <class 'dict'> was specified."
+        m = re.search(r"must be a (\w+)(?: or \w+)?", str(te))
+        if not m:
+            raise  # re-raise; setattr in _apply_params will surface it
+
+        class_name = m.group(1)
+        mod = inspect.getmodule(type(operation))
+        klass = getattr(mod, class_name, None)
+        if klass is None or not (isinstance(klass, type) and issubclass(klass, HasTraits)):
+            raise  # can't coerce; let the caller raise a meaningful error
+
+        return [klass(**d) if isinstance(d, dict) else d for d in value]
+
+
 def _apply_params(operation, params: dict[str, Any]) -> None:
     """Set operation traits from a plain dict, ignoring unknown keys."""
     for key, value in params.items():
         if hasattr(operation, key):
+            value = _coerce_value(operation, key, value)
             try:
                 setattr(operation, key, value)
             except Exception as exc:
