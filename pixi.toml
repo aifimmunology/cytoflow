@@ -1,9 +1,9 @@
-[project]
+[workspace]
 name = "cytoflow"
 description = "Python tools for quantitative, reproducible flow cytometry analysis"
 version = "0.1.0"
 channels = ["conda-forge", "cytoflow"]
-platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+platforms = ["linux-64", "linux-aarch64"]
 
 # ── Shared scientific core (used by both gui and web environments) ────────────
 [dependencies]
@@ -15,7 +15,7 @@ scikit-learn = "1.7.*"
 seaborn      = "0.13.*"
 statsmodels  = "0.14.*"
 bottleneck   = "1.4.*"
-numexpr      = "2.11.*"
+numexpr      = "2.10.*"
 numba        = "0.61.*"
 opentsne     = "1.0.*"
 igraph       = "0.10.*"
@@ -38,26 +38,13 @@ setuptools   = "80.*"
 swig         = "*"          # Logicle C++ extension build tool
 pip          = "*"
 
-# ── GUI feature — Qt5 desktop application (cytoflowgui) ──────────────────────
-[feature.gui.dependencies]
-matplotlib        = "3.10.*"
-qt                = "5.*"
-pyqt              = "5.*"
-pyqtwebengine     = "5.*"
-traitsui          = "8.0.*"
-pyface            = "8.0.*"
-envisage          = "7.0.*"
-configobj         = "5.0.*"
-yapf              = "0.40.*"
-ipympl            = "*"
-jupyterlab        = "*"
-
 # ── Web feature — FastAPI back end + Dash/Plotly front end (cytoflowweb) ─────
 [feature.web.dependencies]
 # matplotlib is kept for backward-compatible IView.plot() and Jupyter use
 matplotlib = "3.10.*"
 
 [feature.web.pypi-dependencies]
+fcsparser            = ">=0.2"
 fastapi              = ">=0.115"
 uvicorn              = { version = ">=0.30", extras = ["standard"] }
 python-multipart     = ">=0.0.9"
@@ -72,12 +59,9 @@ plotly               = ">=5.22"
 start = "python -m cytoflowweb"
 dev   = "uvicorn cytoflowweb.api.main:app --reload --host 0.0.0.0 --port 8000"
 
-[feature.gui.tasks]
-start = "python -m cytoflowgui.run"
-
 # ── Environments ──────────────────────────────────────────────────────────────
 [environments]
-# default: full desktop GUI environment (mirrors environment.yml)
-default = { features = ["gui"], solve-group = "gui" }
-# web: browser-native front end (no Qt dependency)
+# default: web environment (used by Docker builds)
+default = { features = ["web"], solve-group = "web" }
+# explicit alias for web environment
 web     = { features = ["web"], solve-group = "web" }

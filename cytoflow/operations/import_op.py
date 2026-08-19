@@ -42,7 +42,13 @@ import warnings, math
 from traits.api import (HasTraits, HasStrictTraits, provides, Str, List, Any,
                         Dict, File, Constant, Enum, Int)
 
-from fcsparser import fcsparser
+try:
+    # Local submodule layout (historical): package exposes nested module
+    # "fcsparser.fcsparser".
+    from fcsparser import fcsparser
+except ImportError:
+    # PyPI package layout: top-level package already exposes parse utilities.
+    import fcsparser as fcsparser
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -669,5 +675,4 @@ def parse_tube(filename, experiment = None, data_set = 0, metadata_only = False)
     del tube_meta['__header__']
             
     return tube_meta, tube_data
-
 

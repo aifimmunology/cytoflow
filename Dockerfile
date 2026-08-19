@@ -37,9 +37,6 @@ WORKDIR /app
 # dependencies don't change (i.e. independently of source code changes).
 COPY pixi.toml pixi.lock* ./
 
-# fcsparser is a git submodule required at install time
-COPY fcsparser/ ./fcsparser/
-
 # Install the 'web' environment.  If pixi.lock exists it is used (--frozen);
 # otherwise the solver runs and produces a fresh lock.
 RUN if [ -f pixi.lock ]; then \
@@ -51,7 +48,7 @@ RUN if [ -f pixi.lock ]; then \
 # ── Copy source and compile C++ extension ────────────────────────────────────
 COPY . .
 
-RUN pixi run -e web python setup.py build_ext --inplace
+RUN pixi run -e web pip install --no-build-isolation -e .
 
 # ── Runtime configuration ─────────────────────────────────────────────────────
 # Defaults are suitable for running inside the container.
