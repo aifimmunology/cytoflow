@@ -45,6 +45,15 @@ RUN if [ -f pixi.lock ]; then \
       pixi install -e web; \
     fi
 
+# ── Patch fcsparser for NumPy 2.0 compatibility ───────────────────────────────
+# PyPI fcsparser 0.2.x calls ndarray.newbyteorder() which was removed in
+# NumPy 2.0. Replace with the equivalent view() call.
+RUN FCSPARSER_API=$(pixi run -e web python -c \
+        "import fcsparser, os; print(os.path.join(os.path.dirname(fcsparser.__file__), 'api.py'))") \
+    && sed -i \
+        's/data = data\.byteswap()\.newbyteorder()/data = data.byteswap().view(data.dtype.newbyteorder())/' \
+        "$FCSPARSER_API"
+
 # ── Copy source and compile C++ extension ────────────────────────────────────
 COPY . .
 
