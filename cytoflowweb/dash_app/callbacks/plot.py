@@ -21,6 +21,25 @@ from cytoflowweb import config
 
 API_BASE = config.API_BASE
 
+# View IDs must match the backend registry keys in
+# cytoflowweb.views.plotly.* @register("...").
+PLOT_VIEW_OPTIONS = [
+    {"label": "Histogram", "value": "cytoflow.view.histogram"},
+    {"label": "Scatterplot", "value": "cytoflow.view.scatterplot"},
+    {"label": "2D Histogram", "value": "cytoflow.view.histogram2d"},
+    {"label": "1D KDE", "value": "cytoflow.view.kde1d"},
+    {"label": "2D KDE", "value": "cytoflow.view.kde2d"},
+    {"label": "Density", "value": "cytoflow.view.density"},
+    {"label": "Violin", "value": "cytoflow.view.violin"},
+    {"label": "Bar Chart", "value": "cytoflow.view.barchart"},
+    {"label": "Stats 1D", "value": "cytoflow.view.stats1d"},
+    {"label": "Stats 2D", "value": "cytoflow.view.stats2d"},
+    {"label": "Parallel Coordinates", "value": "cytoflow.view.parallel_coords"},
+    {"label": "Radviz", "value": "cytoflow.view.radviz"},
+    {"label": "Matrix", "value": "cytoflow.view.matrix"},
+    {"label": "MST", "value": "cytoflow.view.mst"},
+]
+
 
 def _api(method: str, path: str, **kwargs):
     url = f"{API_BASE}{path}"
@@ -50,12 +69,9 @@ def register(app: dash.Dash) -> None:
         step = steps[selected_index]
         current_view_id = step.get("current_view_id")
 
-        # Phase 1: only stub views available per step.
-        # Phase 2 will populate this from the operation's available views.
-        options = [{"label": "Histogram", "value": "cytoflow.views.histogram"},
-                   {"label": "Scatterplot", "value": "cytoflow.views.scatterplot"}]
-
-        value = current_view_id if current_view_id else (options[0]["value"] if options else None)
+        options = PLOT_VIEW_OPTIONS
+        option_values = {opt["value"] for opt in options}
+        value = current_view_id if current_view_id in option_values else (options[0]["value"] if options else None)
         return options, value
 
     # ── Set active view when dropdown changes ─────────────────────────────────
