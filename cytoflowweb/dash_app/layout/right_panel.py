@@ -89,12 +89,62 @@ def _make_params_tab() -> html.Div:
     return html.Div(
         className="p-3",
         children=[
+            html.H6("Plot Parameters", className="mb-3"),
+            dbc.Row(
+                className="g-2 mb-2",
+                children=[
+                    dbc.Col(_labeled_dropdown("View", "dropdown-view-select", clearable=False), width=12),
+                ],
+            ),
+            dbc.Row(
+                className="g-2 mb-2",
+                children=[
+                    dbc.Col(_labeled_dropdown("Channel", "dropdown-channel", clearable=False), width=12),
+                ],
+            ),
+            dbc.Row(
+                className="g-2 mb-2",
+                children=[
+                    dbc.Col(_labeled_dropdown("X Channel", "dropdown-xchannel", clearable=False), width=6),
+                    dbc.Col(_labeled_dropdown("Y Channel", "dropdown-ychannel", clearable=False), width=6),
+                ],
+            ),
+            dbc.Row(
+                className="g-2 mb-2",
+                children=[
+                    dbc.Col(_labeled_dropdown("Scale", "dropdown-scale", clearable=False), width=4),
+                    dbc.Col(_labeled_dropdown("X Scale", "dropdown-xscale", clearable=False), width=4),
+                    dbc.Col(_labeled_dropdown("Y Scale", "dropdown-yscale", clearable=False), width=4),
+                ],
+            ),
+            dbc.Row(
+                className="g-2 mb-3",
+                children=[
+                    dbc.Col(_labeled_dropdown("Hue Facet", "dropdown-huefacet", clearable=True), width=12),
+                    dbc.Col(_labeled_dropdown("X Facet", "dropdown-xfacet", clearable=True), width=6),
+                    dbc.Col(_labeled_dropdown("Y Facet", "dropdown-yfacet", clearable=True), width=6),
+                ],
+            ),
+            html.Hr(),
             html.Div(
                 id="op-params-container",
                 children=html.P(
                     "Select a pipeline step to see its parameters.",
                     className="text-muted small",
                 ),
+            ),
+        ],
+    )
+
+
+def _labeled_dropdown(label: str, control_id: str, clearable: bool) -> html.Div:
+    return html.Div(
+        children=[
+            html.Label(label, className="small text-muted mb-1 d-block"),
+            dcc.Dropdown(
+                id=control_id,
+                options=[],
+                clearable=clearable,
             ),
         ],
     )

@@ -16,97 +16,17 @@ def make_canvas() -> html.Div:
         children=[
             # ── Plot toolbar ──────────────────────────────────────────────────
             html.Div(
-                className="canvas-toolbar d-flex flex-column p-2 border-bottom gap-2",
+                className="canvas-toolbar d-flex align-items-center p-2 border-bottom gap-2",
                 children=[
-                    html.Div(
-                        className="d-flex align-items-center gap-2 w-100",
-                        children=[
-                            html.Span("View:", className="text-muted small"),
-                            dcc.Dropdown(
-                                id="dropdown-view-select",
-                                placeholder="Select a view…",
-                                options=[],
-                                style={"minWidth": "220px", "maxWidth": "320px"},
-                                clearable=False,
-                            ),
-                            dbc.Button(
-                                html.I(className="bi bi-arrow-clockwise"),
-                                id="btn-refresh-plot",
-                                color="outline-secondary",
-                                size="sm",
-                                title="Refresh plot",
-                            ),
-                            html.Div(id="plot-sample-annotation", className="ms-auto small text-muted"),
-                        ],
+                    html.Span("Plot", className="text-muted small"),
+                    dbc.Button(
+                        html.I(className="bi bi-arrow-clockwise"),
+                        id="btn-refresh-plot",
+                        color="outline-secondary",
+                        size="sm",
+                        title="Refresh plot",
                     ),
-                    html.Div(
-                        className="d-flex flex-wrap gap-2 w-100",
-                        children=[
-                            dcc.Dropdown(
-                                id="dropdown-channel",
-                                placeholder="channel",
-                                options=[],
-                                clearable=False,
-                                style={"minWidth": "150px"},
-                            ),
-                            dcc.Dropdown(
-                                id="dropdown-xchannel",
-                                placeholder="x channel",
-                                options=[],
-                                clearable=False,
-                                style={"minWidth": "150px"},
-                            ),
-                            dcc.Dropdown(
-                                id="dropdown-ychannel",
-                                placeholder="y channel",
-                                options=[],
-                                clearable=False,
-                                style={"minWidth": "150px"},
-                            ),
-                            dcc.Dropdown(
-                                id="dropdown-scale",
-                                placeholder="scale",
-                                options=[],
-                                clearable=False,
-                                style={"minWidth": "120px"},
-                            ),
-                            dcc.Dropdown(
-                                id="dropdown-xscale",
-                                placeholder="x scale",
-                                options=[],
-                                clearable=False,
-                                style={"minWidth": "120px"},
-                            ),
-                            dcc.Dropdown(
-                                id="dropdown-yscale",
-                                placeholder="y scale",
-                                options=[],
-                                clearable=False,
-                                style={"minWidth": "120px"},
-                            ),
-                            dcc.Dropdown(
-                                id="dropdown-huefacet",
-                                placeholder="hue facet",
-                                options=[],
-                                clearable=True,
-                                style={"minWidth": "160px"},
-                            ),
-                            dcc.Dropdown(
-                                id="dropdown-xfacet",
-                                placeholder="x facet",
-                                options=[],
-                                clearable=True,
-                                style={"minWidth": "140px"},
-                            ),
-                            dcc.Dropdown(
-                                id="dropdown-yfacet",
-                                placeholder="y facet",
-                                options=[],
-                                clearable=True,
-                                style={"minWidth": "140px"},
-                            ),
-                        ],
-                    ),
+                    html.Div(id="plot-sample-annotation", className="ms-auto small text-muted"),
                 ],
             ),
 
