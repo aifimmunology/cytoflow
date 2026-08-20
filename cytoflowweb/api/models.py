@@ -136,6 +136,8 @@ class WorkflowState:
                 "op_warning": step.op_warning,
                 "estimate_error": step.estimate_error,
                 "channels": step.channels,
+                "conditions": list(step.conditions.keys()),
+                "statistics": list(step.statistics.keys()),
                 "current_view_id": step.current_view_id,
             }
             for i, step in enumerate(self.steps)

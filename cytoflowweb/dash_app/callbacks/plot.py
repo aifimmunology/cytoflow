@@ -40,6 +40,13 @@ PLOT_VIEW_OPTIONS = [
     {"label": "MST", "value": "cytoflow.view.mst"},
 ]
 
+SCALE_OPTIONS = [
+    {"label": "Linear", "value": "linear"},
+    {"label": "Log", "value": "log"},
+    {"label": "Logicle", "value": "logicle"},
+    {"label": "Hyperlog", "value": "hlog"},
+]
+
 
 def _api(method: str, path: str, **kwargs):
     url = f"{API_BASE}{path}"
@@ -74,20 +81,109 @@ def register(app: dash.Dash) -> None:
         value = current_view_id if current_view_id in option_values else (options[0]["value"] if options else None)
         return options, value
 
+    # ── Populate plot parameter controls from selected step metadata ───────────
+    @app.callback(
+        Output("dropdown-channel", "options"),
+        Output("dropdown-channel", "value"),
+        Output("dropdown-xchannel", "options"),
+        Output("dropdown-xchannel", "value"),
+        Output("dropdown-ychannel", "options"),
+        Output("dropdown-ychannel", "value"),
+        Output("dropdown-scale", "options"),
+        Output("dropdown-scale", "value"),
+        Output("dropdown-xscale", "options"),
+        Output("dropdown-xscale", "value"),
+        Output("dropdown-yscale", "options"),
+        Output("dropdown-yscale", "value"),
+        Output("dropdown-huefacet", "options"),
+        Output("dropdown-huefacet", "value"),
+        Output("dropdown-xfacet", "options"),
+        Output("dropdown-xfacet", "value"),
+        Output("dropdown-yfacet", "options"),
+        Output("dropdown-yfacet", "value"),
+        Input("store-selected-step", "data"),
+        Input("store-workflow", "data"),
+        prevent_initial_call=True,
+    )
+    def populate_plot_controls(selected_index: int, workflow: dict | None):
+        if selected_index < 0 or not workflow:
+            return [], None, [], None, [], None, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", [], None, [], None, [], None
+
+        steps = workflow.get("steps", [])
+        if not steps or selected_index >= len(steps):
+            return [], None, [], None, [], None, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", [], None, [], None, [], None
+
+        step = steps[selected_index]
+        channels = step.get("channels", [])
+        conditions = step.get("conditions", [])
+
+        ch_opts = [{"label": c, "value": c} for c in channels]
+        cond_opts = [{"label": c, "value": c} for c in conditions]
+
+        channel = channels[0] if channels else None
+        xchannel = channels[0] if channels else None
+        ychannel = channels[1] if len(channels) > 1 else (channels[0] if channels else None)
+
+        return (
+            ch_opts, channel,
+            ch_opts, xchannel,
+            ch_opts, ychannel,
+            SCALE_OPTIONS, "linear",
+            SCALE_OPTIONS, "linear",
+            SCALE_OPTIONS, "linear",
+            cond_opts, None,
+            cond_opts, None,
+            cond_opts, None,
+        )
+
     # ── Set active view when dropdown changes ─────────────────────────────────
     @app.callback(
         Output("store-workflow", "data", allow_duplicate=True),
         Input("dropdown-view-select", "value"),
+        Input("dropdown-channel", "value"),
+        Input("dropdown-xchannel", "value"),
+        Input("dropdown-ychannel", "value"),
+        Input("dropdown-scale", "value"),
+        Input("dropdown-xscale", "value"),
+        Input("dropdown-yscale", "value"),
+        Input("dropdown-huefacet", "value"),
+        Input("dropdown-xfacet", "value"),
+        Input("dropdown-yfacet", "value"),
         State("store-session-id", "data"),
         State("store-selected-step", "data"),
         prevent_initial_call=True,
     )
-    def set_active_view(view_id: str | None, session_id: str, selected_index: int):
+    def set_active_view(
+        view_id: str | None,
+        channel: str | None,
+        xchannel: str | None,
+        ychannel: str | None,
+        scale: str | None,
+        xscale: str | None,
+        yscale: str | None,
+        huefacet: str | None,
+        xfacet: str | None,
+        yfacet: str | None,
+        session_id: str,
+        selected_index: int,
+    ):
         if view_id is None or not session_id or selected_index < 0:
             raise PreventUpdate
+        params = {
+            "channel": channel,
+            "xchannel": xchannel,
+            "ychannel": ychannel,
+            "scale": scale,
+            "xscale": xscale,
+            "yscale": yscale,
+            "huefacet": huefacet,
+            "xfacet": xfacet,
+            "yfacet": yfacet,
+        }
+        params = {k: v for k, v in params.items() if v not in (None, "")}
         try:
             _api("post", f"/sessions/{session_id}/workflow/steps/{selected_index}/view",
-                 json={"view_id": view_id, "params": {}})
+                 json={"view_id": view_id, "params": params})
             return _api("get", f"/sessions/{session_id}/workflow")
         except Exception:
             raise PreventUpdate
@@ -99,16 +195,53 @@ def register(app: dash.Dash) -> None:
         Input("store-selected-step", "data"),
         Input("store-workflow", "data"),
         Input("btn-refresh-plot", "n_clicks"),
+        Input("dropdown-view-select", "value"),
+        Input("dropdown-channel", "value"),
+        Input("dropdown-xchannel", "value"),
+        Input("dropdown-ychannel", "value"),
+        Input("dropdown-scale", "value"),
+        Input("dropdown-xscale", "value"),
+        Input("dropdown-yscale", "value"),
+        Input("dropdown-huefacet", "value"),
+        Input("dropdown-xfacet", "value"),
+        Input("dropdown-yfacet", "value"),
         State("store-session-id", "data"),
         prevent_initial_call=True,
     )
-    def refresh_plot(selected_index: int, workflow: dict | None,
-                     _refresh_clicks, session_id: str):
+    def refresh_plot(
+        selected_index: int,
+        workflow: dict | None,
+        _refresh_clicks,
+        view_id: str | None,
+        channel: str | None,
+        xchannel: str | None,
+        ychannel: str | None,
+        scale: str | None,
+        xscale: str | None,
+        yscale: str | None,
+        huefacet: str | None,
+        xfacet: str | None,
+        yfacet: str | None,
+        session_id: str,
+    ):
         if selected_index < 0 or not session_id:
             raise PreventUpdate
 
         try:
-            figure = _api("get", f"/sessions/{session_id}/workflow/steps/{selected_index}/plot")
+            params = {
+                "view_id": view_id,
+                "channel": channel,
+                "xchannel": xchannel,
+                "ychannel": ychannel,
+                "scale": scale,
+                "xscale": xscale,
+                "yscale": yscale,
+                "huefacet": huefacet,
+                "xfacet": xfacet,
+                "yfacet": yfacet,
+            }
+            params = {k: v for k, v in params.items() if v not in (None, "")}
+            figure = _api("get", f"/sessions/{session_id}/workflow/steps/{selected_index}/plot", params=params)
             return figure, None
         except Exception:
             raise PreventUpdate
@@ -152,4 +285,6 @@ def register(app: dash.Dash) -> None:
 
         step = steps[selected_index]
         channels = ", ".join(step.get("channels", [])) or "—"
-        return channels, "—", "—"
+        conditions = ", ".join(step.get("conditions", [])) or "—"
+        statistics = ", ".join(step.get("statistics", [])) or "—"
+        return channels, conditions, statistics

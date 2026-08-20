@@ -29,6 +29,8 @@ class StepSummary(BaseModel):
     op_warning: str
     estimate_error: str
     channels: list[str]
+    conditions: list[str] = []
+    statistics: list[str] = []
     current_view_id: str | None
 
 
