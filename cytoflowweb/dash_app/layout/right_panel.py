@@ -99,12 +99,6 @@ def _make_params_tab() -> html.Div:
             dbc.Row(
                 className="g-2 mb-2",
                 children=[
-                    dbc.Col(_labeled_dropdown("Channel", "dropdown-channel", clearable=False), width=12),
-                ],
-            ),
-            dbc.Row(
-                className="g-2 mb-2",
-                children=[
                     dbc.Col(_labeled_dropdown("X Channel", "dropdown-xchannel", clearable=False), width=6),
                     dbc.Col(_labeled_dropdown("Y Channel", "dropdown-ychannel", clearable=False), width=6),
                 ],
