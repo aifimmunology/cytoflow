@@ -106,9 +106,8 @@ def _make_params_tab() -> html.Div:
             dbc.Row(
                 className="g-2 mb-2",
                 children=[
-                    dbc.Col(_labeled_dropdown("Scale", "dropdown-scale", clearable=False), width=4),
-                    dbc.Col(_labeled_dropdown("X Scale", "dropdown-xscale", clearable=False), width=4),
-                    dbc.Col(_labeled_dropdown("Y Scale", "dropdown-yscale", clearable=False), width=4),
+                    dbc.Col(_labeled_dropdown("X Scale", "dropdown-xscale", clearable=False), width=6),
+                    dbc.Col(_labeled_dropdown("Y Scale", "dropdown-yscale", clearable=False), width=6),
                 ],
             ),
             dbc.Row(

@@ -53,6 +53,15 @@ SINGLE_CHANNEL_VIEWS = {
     "cytoflow.view.violin",
 }
 
+HUE_CAPABLE_VIEWS = {
+    "cytoflow.view.histogram",
+    "cytoflow.view.scatterplot",
+    "cytoflow.view.kde1d",
+    "cytoflow.view.parallel_coords",
+    "cytoflow.view.radviz",
+    "cytoflow.view.violin",
+}
+
 
 def _api(method: str, path: str, **kwargs):
     url = f"{API_BASE}{path}"
@@ -94,14 +103,14 @@ def register(app: dash.Dash) -> None:
         Output("dropdown-ychannel", "options"),
         Output("dropdown-ychannel", "value"),
         Output("dropdown-ychannel", "disabled"),
-        Output("dropdown-scale", "options"),
-        Output("dropdown-scale", "value"),
         Output("dropdown-xscale", "options"),
         Output("dropdown-xscale", "value"),
         Output("dropdown-yscale", "options"),
         Output("dropdown-yscale", "value"),
+        Output("dropdown-yscale", "disabled"),
         Output("dropdown-huefacet", "options"),
         Output("dropdown-huefacet", "value"),
+        Output("dropdown-huefacet", "disabled"),
         Output("dropdown-xfacet", "options"),
         Output("dropdown-xfacet", "value"),
         Output("dropdown-yfacet", "options"),
@@ -113,11 +122,11 @@ def register(app: dash.Dash) -> None:
     )
     def populate_plot_controls(view_id: str | None, selected_index: int, workflow: dict | None):
         if selected_index < 0 or not workflow:
-            return [], None, [], None, False, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", [], None, [], None, [], None
+            return [], None, [], None, False, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
 
         steps = workflow.get("steps", [])
         if not steps or selected_index >= len(steps):
-            return [], None, [], None, False, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", [], None, [], None, [], None
+            return [], None, [], None, False, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
 
         step = steps[selected_index]
         channels = step.get("channels", [])
@@ -129,6 +138,8 @@ def register(app: dash.Dash) -> None:
         xchannel = channels[0] if channels else None
         ychannel = channels[1] if len(channels) > 1 else (channels[0] if channels else None)
         y_disabled = view_id in SINGLE_CHANNEL_VIEWS
+        yscale_disabled = view_id in SINGLE_CHANNEL_VIEWS
+        hue_disabled = view_id not in HUE_CAPABLE_VIEWS
 
         return (
             ch_opts, xchannel,
@@ -136,8 +147,9 @@ def register(app: dash.Dash) -> None:
             y_disabled,
             SCALE_OPTIONS, "linear",
             SCALE_OPTIONS, "linear",
-            SCALE_OPTIONS, "linear",
+            yscale_disabled,
             cond_opts, None,
+            hue_disabled,
             cond_opts, None,
             cond_opts, None,
         )
@@ -148,7 +160,6 @@ def register(app: dash.Dash) -> None:
         Input("dropdown-view-select", "value"),
         Input("dropdown-xchannel", "value"),
         Input("dropdown-ychannel", "value"),
-        Input("dropdown-scale", "value"),
         Input("dropdown-xscale", "value"),
         Input("dropdown-yscale", "value"),
         Input("dropdown-huefacet", "value"),
@@ -162,7 +173,6 @@ def register(app: dash.Dash) -> None:
         view_id: str | None,
         xchannel: str | None,
         ychannel: str | None,
-        scale: str | None,
         xscale: str | None,
         yscale: str | None,
         huefacet: str | None,
@@ -176,7 +186,6 @@ def register(app: dash.Dash) -> None:
         params = {
             "xchannel": xchannel,
             "ychannel": ychannel,
-            "scale": scale,
             "xscale": xscale,
             "yscale": yscale,
             "huefacet": huefacet,
@@ -186,7 +195,15 @@ def register(app: dash.Dash) -> None:
         params = {k: v for k, v in params.items() if v not in (None, "")}
         if view_id in SINGLE_CHANNEL_VIEWS and xchannel:
             params["channel"] = xchannel
+            if xscale:
+                params["scale"] = xscale
             params.pop("ychannel", None)
+            params.pop("yscale", None)
+        if view_id == "cytoflow.view.violin" and huefacet:
+            params["groupby"] = huefacet
+            params.pop("huefacet", None)
+        if view_id not in HUE_CAPABLE_VIEWS:
+            params.pop("huefacet", None)
         try:
             _api("post", f"/sessions/{session_id}/workflow/steps/{selected_index}/view",
                  json={"view_id": view_id, "params": params})
@@ -204,7 +221,6 @@ def register(app: dash.Dash) -> None:
         Input("dropdown-view-select", "value"),
         Input("dropdown-xchannel", "value"),
         Input("dropdown-ychannel", "value"),
-        Input("dropdown-scale", "value"),
         Input("dropdown-xscale", "value"),
         Input("dropdown-yscale", "value"),
         Input("dropdown-huefacet", "value"),
@@ -220,7 +236,6 @@ def register(app: dash.Dash) -> None:
         view_id: str | None,
         xchannel: str | None,
         ychannel: str | None,
-        scale: str | None,
         xscale: str | None,
         yscale: str | None,
         huefacet: str | None,
@@ -236,7 +251,6 @@ def register(app: dash.Dash) -> None:
                 "view_id": view_id,
                 "xchannel": xchannel,
                 "ychannel": ychannel,
-                "scale": scale,
                 "xscale": xscale,
                 "yscale": yscale,
                 "huefacet": huefacet,
@@ -246,7 +260,15 @@ def register(app: dash.Dash) -> None:
             params = {k: v for k, v in params.items() if v not in (None, "")}
             if view_id in SINGLE_CHANNEL_VIEWS and xchannel:
                 params["channel"] = xchannel
+                if xscale:
+                    params["scale"] = xscale
                 params.pop("ychannel", None)
+                params.pop("yscale", None)
+            if view_id == "cytoflow.view.violin" and huefacet:
+                params["groupby"] = huefacet
+                params.pop("huefacet", None)
+            if view_id not in HUE_CAPABLE_VIEWS:
+                params.pop("huefacet", None)
             figure = _api("get", f"/sessions/{session_id}/workflow/steps/{selected_index}/plot", params=params)
             return figure, None
         except Exception:
