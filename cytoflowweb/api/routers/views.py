@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/sessions/{session_id}/workflow", tags=["views"])
 
-_MAX_PLOT_EVENTS = 500_000
+_MAX_PLOT_EVENTS = 20_000
 
 # Import all view renderers (populates VIEW_REGISTRY)
 try:
@@ -153,4 +153,3 @@ def _placeholder_figure(message: str) -> dict:
             "paper_bgcolor": "#fafafa",
         },
     }
-

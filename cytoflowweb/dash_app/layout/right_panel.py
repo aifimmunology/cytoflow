@@ -159,7 +159,7 @@ def _labeled_number_input(label: str, control_id: str, min_value: int = 1, step:
                 type="number",
                 min=min_value,
                 step=step,
-                value=500000,
+                value=20000,
             ),
         ],
     )

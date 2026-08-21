@@ -21,7 +21,7 @@ def render(experiment, params: dict) -> dict:
     huefacet = params.get("huefacet") or None
     shade = bool(params.get("shade", True))
     num_points = int(params.get("num_points", 200))
-    events_per_sample = int(params.get("events_per_sample", 500000))
+    events_per_sample = int(params.get("events_per_sample", 20000))
     sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data

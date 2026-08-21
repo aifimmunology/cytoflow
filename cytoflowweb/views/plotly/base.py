@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-MAX_PLOT_EVENTS = 500_000
+MAX_PLOT_EVENTS = 20_000
 
 # Qualitative palette (Plotly's "Alphabet" subset, 10 colours)
 HUE_COLORS = [

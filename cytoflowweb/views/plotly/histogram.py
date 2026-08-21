@@ -19,7 +19,7 @@ def render(experiment, params: dict) -> dict:
     yfacet = params.get("yfacet") or None
     huefacet = params.get("huefacet") or None
     num_bins = int(params.get("num_bins", 256))
-    events_per_sample = int(params.get("events_per_sample", 500000))
+    events_per_sample = int(params.get("events_per_sample", 20000))
     sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data

@@ -19,7 +19,7 @@ def render(experiment, params: dict) -> dict:
 
     scale_map = params.get("scale", {})  # dict channel->scale_name
     huefacet = params.get("huefacet") or None
-    events_per_sample = int(params.get("events_per_sample", 500000))
+    events_per_sample = int(params.get("events_per_sample", 20000))
     sampling_method = params.get("sampling_method", "random")
 
     df = sample_for_plot(experiment.data, events_per_sample=events_per_sample, method=sampling_method)

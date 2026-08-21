@@ -14,7 +14,7 @@ def render(experiment, params: dict) -> dict:
     scale_name = params.get("scale", "linear")
     groupby = params.get("groupby") or None  # condition to group violins
     points = params.get("points", "outliers")  # "all", "outliers", False
-    events_per_sample = int(params.get("events_per_sample", 500000))
+    events_per_sample = int(params.get("events_per_sample", 20000))
     sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data

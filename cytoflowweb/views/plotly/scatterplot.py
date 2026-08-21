@@ -25,7 +25,7 @@ def render(experiment, params: dict) -> dict:
     huefacet = params.get("huefacet") or None
     alpha = float(params.get("alpha", 0.3))
     marker_size = int(params.get("marker_size", 3))
-    events_per_sample = int(params.get("events_per_sample", 500000))
+    events_per_sample = int(params.get("events_per_sample", 20000))
     sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data

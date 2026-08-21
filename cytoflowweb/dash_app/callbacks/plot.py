@@ -130,11 +130,11 @@ def register(app: dash.Dash) -> None:
     )
     def populate_plot_controls(view_id: str | None, selected_index: int, workflow: dict | None):
         if selected_index < 0 or not workflow:
-            return [], None, [], None, False, 500000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
+            return [], None, [], None, False, 20000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
 
         steps = workflow.get("steps", [])
         if not steps or selected_index >= len(steps):
-            return [], None, [], None, False, 500000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
+            return [], None, [], None, False, 20000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
 
         step = steps[selected_index]
         channels = step.get("channels", [])
@@ -151,7 +151,7 @@ def register(app: dash.Dash) -> None:
         y_disabled = view_id in SINGLE_CHANNEL_VIEWS
         yscale_disabled = view_id in SINGLE_CHANNEL_VIEWS
         hue_disabled = view_id not in HUE_CAPABLE_VIEWS
-        events_per_sample = int(view_params.get("events_per_sample", 500000))
+        events_per_sample = int(view_params.get("events_per_sample", 20000))
         sampling_method = view_params.get("sampling_method", "random")
         xscale = view_params.get("xscale") or view_params.get("scale") or "linear"
         yscale = view_params.get("yscale", "linear")

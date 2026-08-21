@@ -27,7 +27,7 @@ def render(experiment, params: dict) -> dict:
     xfacet = params.get("xfacet") or None
     yfacet = params.get("yfacet") or None
     num_points = int(params.get("num_points", 50))  # grid resolution per axis
-    events_per_sample = int(params.get("events_per_sample", 500000))
+    events_per_sample = int(params.get("events_per_sample", 20000))
     sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data
