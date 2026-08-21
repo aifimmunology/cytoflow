@@ -129,12 +129,42 @@ def register(app: dash.Dash) -> None:
         prevent_initial_call=True,
     )
     def populate_plot_controls(view_id: str | None, selected_index: int, workflow: dict | None):
+        # When the ONLY trigger is a workflow-data update (which fires every time
+        # the user edits any control, because set_active_view writes store-workflow),
+        # we must NOT overwrite user-editable values — otherwise the value the
+        # user just typed (e.g. Events Per Sample) is immediately clobbered by the
+        # value read back from the workflow. In that case we still refresh the
+        # options/disabled outputs, but leave every ".value" output untouched.
+        # If a step selection or view change is also part of the trigger (e.g. on
+        # first import), we DO populate values so channels auto-select.
+        triggered = {t["prop_id"].split(".")[0] for t in (ctx.triggered or [])}
+        keep_values = triggered == {"store-workflow"}
+
+        def result(opts_vals):
+            (
+                x_opts, x_val, y_opts, y_val, y_dis,
+                events_val, sm_opts, sm_val,
+                xs_opts, xs_val, ys_opts, ys_val, ys_dis,
+                hue_opts, hue_val, hue_dis,
+                xf_opts, xf_val, yf_opts, yf_val,
+            ) = opts_vals
+            if keep_values:
+                x_val = y_val = events_val = sm_val = no_update
+                xs_val = ys_val = hue_val = xf_val = yf_val = no_update
+            return (
+                x_opts, x_val, y_opts, y_val, y_dis,
+                events_val, sm_opts, sm_val,
+                xs_opts, xs_val, ys_opts, ys_val, ys_dis,
+                hue_opts, hue_val, hue_dis,
+                xf_opts, xf_val, yf_opts, yf_val,
+            )
+
         if selected_index < 0 or not workflow:
-            return [], None, [], None, False, 20000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
+            return result(([], None, [], None, False, 20000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None))
 
         steps = workflow.get("steps", [])
         if not steps or selected_index >= len(steps):
-            return [], None, [], None, False, 20000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
+            return result(([], None, [], None, False, 20000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None))
 
         step = steps[selected_index]
         channels = step.get("channels", [])
@@ -161,7 +191,7 @@ def register(app: dash.Dash) -> None:
         xfacet = view_params.get("xfacet")
         yfacet = view_params.get("yfacet")
 
-        return (
+        return result((
             ch_opts, xchannel,
             ch_opts, ychannel,
             y_disabled,
@@ -174,7 +204,7 @@ def register(app: dash.Dash) -> None:
             hue_disabled,
             cond_opts, xfacet,
             cond_opts, yfacet,
-        )
+        ))
 
     # ── Set active view when dropdown changes ─────────────────────────────────
     @app.callback(
