@@ -6,9 +6,10 @@ Shared helpers used by every Plotly view renderer.
 
 Key utilities
 -------------
-sample_for_plot(df, max_events)
-    Random subsample for raw-event traces (scatter, violin, radviz).
-    Histograms and KDE compute from the FULL dataset before sampling.
+sample_for_plot(df, events_per_sample, method)
+    Downsample events for plotting.  If a ``Tube`` condition is present,
+    applies the limit per tube (per uploaded FCS file); otherwise applies a
+    global limit.
 
 scale_transform(series, scale_name, experiment, channel)
     Apply a cytoflow scale (linear / log / logicle / hyperlog) to a
@@ -68,11 +69,44 @@ def register(view_id: str):
 
 # ── Sampling ─────────────────────────────────────────────────────────────────
 
-def sample_for_plot(df: pd.DataFrame, max_events: int = MAX_PLOT_EVENTS) -> pd.DataFrame:
-    """Return a random subsample of ``df`` capped at ``max_events`` rows."""
-    if len(df) <= max_events:
+def sample_for_plot(
+    df: pd.DataFrame,
+    events_per_sample: int | None = None,
+    method: str = "random",
+) -> pd.DataFrame:
+    """Downsample events for plotting.
+
+    Parameters
+    ----------
+    df:
+        Input event dataframe.
+    events_per_sample:
+        Number of events to keep from each sample (each distinct ``Tube`` value
+        if present), or global cap when ``Tube`` is absent.
+    method:
+        ``"first_n"`` or ``"random"``.
+    """
+    if df.empty:
         return df
-    return df.sample(n=max_events, random_state=0)
+
+    n = int(events_per_sample or MAX_PLOT_EVENTS)
+    if n <= 0:
+        n = MAX_PLOT_EVENTS
+
+    def _take(group: pd.DataFrame) -> pd.DataFrame:
+        if len(group) <= n:
+            return group
+        if method == "first_n":
+            return group.iloc[:n]
+        return group.sample(n=n, random_state=0)
+
+    if "Tube" in df.columns:
+        return (
+            df.groupby("Tube", sort=False, group_keys=False)
+            .apply(_take)
+            .reset_index(drop=True)
+        )
+    return _take(df)
 
 
 # ── Scale helpers ─────────────────────────────────────────────────────────────

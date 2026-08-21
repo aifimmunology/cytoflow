@@ -99,6 +99,13 @@ def _make_params_tab() -> html.Div:
             dbc.Row(
                 className="g-2 mb-2",
                 children=[
+                    dbc.Col(_labeled_number_input("Events Per Sample", "input-events-per-sample", min_value=1, step=1000), width=6),
+                    dbc.Col(_labeled_dropdown("Method", "dropdown-sampling-method", clearable=False), width=6),
+                ],
+            ),
+            dbc.Row(
+                className="g-2 mb-2",
+                children=[
                     dbc.Col(_labeled_dropdown("X Channel", "dropdown-xchannel", clearable=False), width=6),
                     dbc.Col(_labeled_dropdown("Y Channel", "dropdown-ychannel", clearable=False), width=6),
                 ],
@@ -138,6 +145,21 @@ def _labeled_dropdown(label: str, control_id: str, clearable: bool) -> html.Div:
                 id=control_id,
                 options=[],
                 clearable=clearable,
+            ),
+        ],
+    )
+
+
+def _labeled_number_input(label: str, control_id: str, min_value: int = 1, step: int = 1) -> html.Div:
+    return html.Div(
+        children=[
+            html.Label(label, className="small text-muted mb-1 d-block"),
+            dbc.Input(
+                id=control_id,
+                type="number",
+                min=min_value,
+                step=step,
+                value=500000,
             ),
         ],
     )

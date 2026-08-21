@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from .base import (register, HUE_COLORS, BASE_LAYOUT, MAX_PLOT_EVENTS,
                    scale_transform, apply_scale_axes, get_facet_groups,
-                   subset_df, placeholder_figure)
+                   subset_df, placeholder_figure, sample_for_plot)
 
 
 @register("cytoflow.view.histogram")
@@ -19,6 +19,8 @@ def render(experiment, params: dict) -> dict:
     yfacet = params.get("yfacet") or None
     huefacet = params.get("huefacet") or None
     num_bins = int(params.get("num_bins", 256))
+    events_per_sample = int(params.get("events_per_sample", 500000))
+    sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data
     fg = get_facet_groups(df, xfacet, yfacet, huefacet)
@@ -45,6 +47,7 @@ def render(experiment, params: dict) -> dict:
             cell = subset_df(df, rv, cv, yfacet, xfacet)
             if cell.empty:
                 continue
+            cell = sample_for_plot(cell, events_per_sample=events_per_sample, method=sampling_method)
 
             # Compute global bin edges from the full cell data (not sampled)
             x_all, tick_info = scale_transform(cell[channel], scale_name, experiment, channel)

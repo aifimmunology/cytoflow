@@ -6,7 +6,7 @@ from plotly.subplots import make_subplots
 from scipy.stats import gaussian_kde
 from .base import (register, HUE_COLORS, BASE_LAYOUT, scale_transform,
                    apply_scale_axes, get_facet_groups, subset_df,
-                   placeholder_figure)
+                   placeholder_figure, sample_for_plot)
 
 
 @register("cytoflow.view.kde1d")
@@ -21,6 +21,8 @@ def render(experiment, params: dict) -> dict:
     huefacet = params.get("huefacet") or None
     shade = bool(params.get("shade", True))
     num_points = int(params.get("num_points", 200))
+    events_per_sample = int(params.get("events_per_sample", 500000))
+    sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data
     fg = get_facet_groups(df, xfacet, yfacet, huefacet)
@@ -44,6 +46,7 @@ def render(experiment, params: dict) -> dict:
             cell = subset_df(df, rv, cv, yfacet, xfacet)
             if cell.empty:
                 continue
+            cell = sample_for_plot(cell, events_per_sample=events_per_sample, method=sampling_method)
 
             # Global x range from the full facet cell
             x_all, tick_info = scale_transform(cell[channel], scale_name, experiment, channel)

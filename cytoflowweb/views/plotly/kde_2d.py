@@ -27,6 +27,8 @@ def render(experiment, params: dict) -> dict:
     xfacet = params.get("xfacet") or None
     yfacet = params.get("yfacet") or None
     num_points = int(params.get("num_points", 50))  # grid resolution per axis
+    events_per_sample = int(params.get("events_per_sample", 500000))
+    sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data
     fg = get_facet_groups(df, xfacet, yfacet, None)
@@ -49,6 +51,7 @@ def render(experiment, params: dict) -> dict:
             cell = subset_df(df, rv, cv, yfacet, xfacet)
             if cell.empty:
                 continue
+            cell = sample_for_plot(cell, events_per_sample=events_per_sample, method=sampling_method)
 
             xvals, xt = scale_transform(cell[xchannel], xscale_name, experiment, xchannel)
             yvals, yt = scale_transform(cell[ychannel], yscale_name, experiment, ychannel)

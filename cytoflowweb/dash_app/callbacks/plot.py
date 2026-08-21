@@ -47,6 +47,11 @@ SCALE_OPTIONS = [
     {"label": "Hyperlog", "value": "hlog"},
 ]
 
+SAMPLING_METHOD_OPTIONS = [
+    {"label": "First N", "value": "first_n"},
+    {"label": "Random", "value": "random"},
+]
+
 SINGLE_CHANNEL_VIEWS = {
     "cytoflow.view.histogram",
     "cytoflow.view.kde1d",
@@ -103,6 +108,9 @@ def register(app: dash.Dash) -> None:
         Output("dropdown-ychannel", "options"),
         Output("dropdown-ychannel", "value"),
         Output("dropdown-ychannel", "disabled"),
+        Output("input-events-per-sample", "value"),
+        Output("dropdown-sampling-method", "options"),
+        Output("dropdown-sampling-method", "value"),
         Output("dropdown-xscale", "options"),
         Output("dropdown-xscale", "value"),
         Output("dropdown-yscale", "options"),
@@ -122,11 +130,11 @@ def register(app: dash.Dash) -> None:
     )
     def populate_plot_controls(view_id: str | None, selected_index: int, workflow: dict | None):
         if selected_index < 0 or not workflow:
-            return [], None, [], None, False, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
+            return [], None, [], None, False, 500000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
 
         steps = workflow.get("steps", [])
         if not steps or selected_index >= len(steps):
-            return [], None, [], None, False, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
+            return [], None, [], None, False, 500000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None
 
         step = steps[selected_index]
         channels = step.get("channels", [])
@@ -145,6 +153,8 @@ def register(app: dash.Dash) -> None:
             ch_opts, xchannel,
             ch_opts, ychannel,
             y_disabled,
+            500000,
+            SAMPLING_METHOD_OPTIONS, "random",
             SCALE_OPTIONS, "linear",
             SCALE_OPTIONS, "linear",
             yscale_disabled,
@@ -160,6 +170,8 @@ def register(app: dash.Dash) -> None:
         Input("dropdown-view-select", "value"),
         Input("dropdown-xchannel", "value"),
         Input("dropdown-ychannel", "value"),
+        Input("input-events-per-sample", "value"),
+        Input("dropdown-sampling-method", "value"),
         Input("dropdown-xscale", "value"),
         Input("dropdown-yscale", "value"),
         Input("dropdown-huefacet", "value"),
@@ -173,6 +185,8 @@ def register(app: dash.Dash) -> None:
         view_id: str | None,
         xchannel: str | None,
         ychannel: str | None,
+        events_per_sample: int | None,
+        sampling_method: str | None,
         xscale: str | None,
         yscale: str | None,
         huefacet: str | None,
@@ -186,6 +200,8 @@ def register(app: dash.Dash) -> None:
         params = {
             "xchannel": xchannel,
             "ychannel": ychannel,
+            "events_per_sample": events_per_sample,
+            "sampling_method": sampling_method,
             "xscale": xscale,
             "yscale": yscale,
             "huefacet": huefacet,
@@ -221,6 +237,8 @@ def register(app: dash.Dash) -> None:
         Input("dropdown-view-select", "value"),
         Input("dropdown-xchannel", "value"),
         Input("dropdown-ychannel", "value"),
+        Input("input-events-per-sample", "value"),
+        Input("dropdown-sampling-method", "value"),
         Input("dropdown-xscale", "value"),
         Input("dropdown-yscale", "value"),
         Input("dropdown-huefacet", "value"),
@@ -236,6 +254,8 @@ def register(app: dash.Dash) -> None:
         view_id: str | None,
         xchannel: str | None,
         ychannel: str | None,
+        events_per_sample: int | None,
+        sampling_method: str | None,
         xscale: str | None,
         yscale: str | None,
         huefacet: str | None,
@@ -251,6 +271,8 @@ def register(app: dash.Dash) -> None:
                 "view_id": view_id,
                 "xchannel": xchannel,
                 "ychannel": ychannel,
+                "events_per_sample": events_per_sample,
+                "sampling_method": sampling_method,
                 "xscale": xscale,
                 "yscale": yscale,
                 "huefacet": huefacet,

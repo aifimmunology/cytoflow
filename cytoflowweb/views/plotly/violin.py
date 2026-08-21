@@ -14,6 +14,8 @@ def render(experiment, params: dict) -> dict:
     scale_name = params.get("scale", "linear")
     groupby = params.get("groupby") or None  # condition to group violins
     points = params.get("points", "outliers")  # "all", "outliers", False
+    events_per_sample = int(params.get("events_per_sample", 500000))
+    sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data
     group_vals = [None]
@@ -30,7 +32,7 @@ def render(experiment, params: dict) -> dict:
         else:
             cell = df
 
-        cell = sample_for_plot(cell)
+        cell = sample_for_plot(cell, events_per_sample=events_per_sample, method=sampling_method)
         vals, tick_info = scale_transform(cell[channel], scale_name, experiment, channel)
         if x_tick_info is None:
             x_tick_info = tick_info

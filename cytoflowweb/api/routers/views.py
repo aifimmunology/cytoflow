@@ -74,6 +74,8 @@ def get_plot(
     scale: str | None = None,
     xscale: str | None = None,
     yscale: str | None = None,
+    events_per_sample: int | None = None,
+    sampling_method: str | None = None,
     huefacet: str | None = None,
     xfacet: str | None = None,
     yfacet: str | None = None,
@@ -112,6 +114,8 @@ def get_plot(
     if scale:      params["scale"]    = scale
     if xscale:     params["xscale"]   = xscale
     if yscale:     params["yscale"]   = yscale
+    if events_per_sample is not None: params["events_per_sample"] = events_per_sample
+    if sampling_method: params["sampling_method"] = sampling_method
     if huefacet:   params["huefacet"] = huefacet
     if xfacet:     params["xfacet"]   = xfacet
     if yfacet:     params["yfacet"]   = yfacet
@@ -149,5 +153,4 @@ def _placeholder_figure(message: str) -> dict:
             "paper_bgcolor": "#fafafa",
         },
     }
-
 

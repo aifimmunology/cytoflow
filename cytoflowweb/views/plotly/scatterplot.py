@@ -25,6 +25,8 @@ def render(experiment, params: dict) -> dict:
     huefacet = params.get("huefacet") or None
     alpha = float(params.get("alpha", 0.3))
     marker_size = int(params.get("marker_size", 3))
+    events_per_sample = int(params.get("events_per_sample", 500000))
+    sampling_method = params.get("sampling_method", "random")
 
     df = experiment.data
     fg = get_facet_groups(df, xfacet, yfacet, huefacet)
@@ -59,7 +61,7 @@ def render(experiment, params: dict) -> dict:
                     continue
 
                 # Apply 500k cap to raw events
-                hcell = sample_for_plot(hcell)
+                hcell = sample_for_plot(hcell, events_per_sample=events_per_sample, method=sampling_method)
 
                 xvals, xt = scale_transform(hcell[xchannel], xscale_name, experiment, xchannel)
                 yvals, yt = scale_transform(hcell[ychannel], yscale_name, experiment, ychannel)
