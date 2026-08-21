@@ -139,6 +139,7 @@ class WorkflowState:
                 "conditions": list(step.conditions.keys()),
                 "statistics": list(step.statistics.keys()),
                 "current_view_id": step.current_view_id,
+                "view_params": dict(step.view_params),
             }
             for i, step in enumerate(self.steps)
         ]

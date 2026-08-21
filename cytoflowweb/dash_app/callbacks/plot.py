@@ -139,29 +139,41 @@ def register(app: dash.Dash) -> None:
         step = steps[selected_index]
         channels = step.get("channels", [])
         conditions = step.get("conditions", [])
+        view_params = step.get("view_params", {}) or {}
 
         ch_opts = [{"label": c, "value": c} for c in channels]
         cond_opts = [{"label": c, "value": c} for c in conditions]
 
-        xchannel = channels[0] if channels else None
-        ychannel = channels[1] if len(channels) > 1 else (channels[0] if channels else None)
+        default_x = channels[0] if channels else None
+        default_y = channels[1] if len(channels) > 1 else (channels[0] if channels else None)
+        xchannel = view_params.get("xchannel") or view_params.get("channel") or default_x
+        ychannel = view_params.get("ychannel") or default_y
         y_disabled = view_id in SINGLE_CHANNEL_VIEWS
         yscale_disabled = view_id in SINGLE_CHANNEL_VIEWS
         hue_disabled = view_id not in HUE_CAPABLE_VIEWS
+        events_per_sample = int(view_params.get("events_per_sample", 500000))
+        sampling_method = view_params.get("sampling_method", "random")
+        xscale = view_params.get("xscale") or view_params.get("scale") or "linear"
+        yscale = view_params.get("yscale", "linear")
+        huefacet = view_params.get("huefacet")
+        if view_id == "cytoflow.view.violin":
+            huefacet = view_params.get("groupby", huefacet)
+        xfacet = view_params.get("xfacet")
+        yfacet = view_params.get("yfacet")
 
         return (
             ch_opts, xchannel,
             ch_opts, ychannel,
             y_disabled,
-            500000,
-            SAMPLING_METHOD_OPTIONS, "random",
-            SCALE_OPTIONS, "linear",
-            SCALE_OPTIONS, "linear",
+            events_per_sample,
+            SAMPLING_METHOD_OPTIONS, sampling_method,
+            SCALE_OPTIONS, xscale,
+            SCALE_OPTIONS, yscale,
             yscale_disabled,
-            cond_opts, None,
+            cond_opts, huefacet,
             hue_disabled,
-            cond_opts, None,
-            cond_opts, None,
+            cond_opts, xfacet,
+            cond_opts, yfacet,
         )
 
     # ── Set active view when dropdown changes ─────────────────────────────────

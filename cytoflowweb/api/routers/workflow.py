@@ -32,6 +32,7 @@ class StepSummary(BaseModel):
     conditions: list[str] = []
     statistics: list[str] = []
     current_view_id: str | None
+    view_params: dict = {}
 
 
 class WorkflowSummary(BaseModel):
