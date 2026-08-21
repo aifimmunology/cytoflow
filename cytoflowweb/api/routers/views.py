@@ -59,7 +59,11 @@ def set_view(session_id: str, step_index: int, body: SetViewRequest) -> dict:
         raise HTTPException(status_code=422, detail="step_index out of range")
     step = state.steps[step_index]
     step.current_view_id = body.view_id
-    step.view_params = body.params
+    # Preserve existing values for params omitted from this payload (for
+    # example while a numeric input is mid-edit and momentarily missing).
+    merged_params = dict(step.view_params or {})
+    merged_params.update(body.params or {})
+    step.view_params = merged_params
     return {"step_index": step_index, "view_id": body.view_id}
 
 
