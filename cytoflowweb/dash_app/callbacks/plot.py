@@ -108,9 +108,7 @@ def register(app: dash.Dash) -> None:
         Output("dropdown-ychannel", "options"),
         Output("dropdown-ychannel", "value"),
         Output("dropdown-ychannel", "disabled"),
-        Output("input-events-per-sample", "value"),
         Output("dropdown-sampling-method", "options"),
-        Output("dropdown-sampling-method", "value"),
         Output("dropdown-xscale", "options"),
         Output("dropdown-xscale", "value"),
         Output("dropdown-yscale", "options"),
@@ -143,28 +141,28 @@ def register(app: dash.Dash) -> None:
         def result(opts_vals):
             (
                 x_opts, x_val, y_opts, y_val, y_dis,
-                events_val, sm_opts, sm_val,
+                sm_opts,
                 xs_opts, xs_val, ys_opts, ys_val, ys_dis,
                 hue_opts, hue_val, hue_dis,
                 xf_opts, xf_val, yf_opts, yf_val,
             ) = opts_vals
             if keep_values:
-                x_val = y_val = events_val = sm_val = no_update
+                x_val = y_val = no_update
                 xs_val = ys_val = hue_val = xf_val = yf_val = no_update
             return (
                 x_opts, x_val, y_opts, y_val, y_dis,
-                events_val, sm_opts, sm_val,
+                sm_opts,
                 xs_opts, xs_val, ys_opts, ys_val, ys_dis,
                 hue_opts, hue_val, hue_dis,
                 xf_opts, xf_val, yf_opts, yf_val,
             )
 
         if selected_index < 0 or not workflow:
-            return result(([], None, [], None, False, 20000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None))
+            return result(([], None, [], None, False, SAMPLING_METHOD_OPTIONS, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None))
 
         steps = workflow.get("steps", [])
         if not steps or selected_index >= len(steps):
-            return result(([], None, [], None, False, 20000, SAMPLING_METHOD_OPTIONS, "random", SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None))
+            return result(([], None, [], None, False, SAMPLING_METHOD_OPTIONS, SCALE_OPTIONS, "linear", SCALE_OPTIONS, "linear", False, [], None, False, [], None, [], None))
 
         step = steps[selected_index]
         channels = step.get("channels", [])
@@ -181,8 +179,6 @@ def register(app: dash.Dash) -> None:
         y_disabled = view_id in SINGLE_CHANNEL_VIEWS
         yscale_disabled = view_id in SINGLE_CHANNEL_VIEWS
         hue_disabled = view_id not in HUE_CAPABLE_VIEWS
-        events_per_sample = int(view_params.get("events_per_sample", 20000))
-        sampling_method = view_params.get("sampling_method", "random")
         xscale = view_params.get("xscale") or view_params.get("scale") or "linear"
         yscale = view_params.get("yscale", "linear")
         huefacet = view_params.get("huefacet")
@@ -195,8 +191,7 @@ def register(app: dash.Dash) -> None:
             ch_opts, xchannel,
             ch_opts, ychannel,
             y_disabled,
-            events_per_sample,
-            SAMPLING_METHOD_OPTIONS, sampling_method,
+            SAMPLING_METHOD_OPTIONS,
             SCALE_OPTIONS, xscale,
             SCALE_OPTIONS, yscale,
             yscale_disabled,
@@ -273,6 +268,7 @@ def register(app: dash.Dash) -> None:
     @app.callback(
         Output("main-plot", "figure"),
         Output("plot-loading-trigger", "children"),
+        Output("plot-sample-annotation", "children"),
         Input("store-selected-step", "data"),
         Input("store-workflow", "data"),
         Input("btn-refresh-plot", "n_clicks"),
@@ -308,6 +304,20 @@ def register(app: dash.Dash) -> None:
         if selected_index < 0 or not session_id:
             raise PreventUpdate
 
+        # Defensive fallback: if a control momentarily reports None (some inputs
+        # can do this when a *different* control is the trigger), fall back to the
+        # value already persisted on the step so we never silently revert to a
+        # backend default.
+        step_params = {}
+        if workflow:
+            steps = workflow.get("steps", [])
+            if 0 <= selected_index < len(steps):
+                step_params = steps[selected_index].get("view_params", {}) or {}
+        if events_per_sample in (None, ""):
+            events_per_sample = step_params.get("events_per_sample")
+        if sampling_method in (None, ""):
+            sampling_method = step_params.get("sampling_method")
+
         try:
             params = {
                 "view_id": view_id,
@@ -334,7 +344,15 @@ def register(app: dash.Dash) -> None:
             if view_id not in HUE_CAPABLE_VIEWS:
                 params.pop("huefacet", None)
             figure = _api("get", f"/sessions/{session_id}/workflow/steps/{selected_index}/plot", params=params)
-            return figure, None
+            method_label = {"first_n": "first N", "random": "random"}.get(
+                sampling_method or "random", sampling_method or "random"
+            )
+            try:
+                n_label = f"{int(events_per_sample):,}"
+            except (TypeError, ValueError):
+                n_label = str(events_per_sample)
+            annotation = f"{n_label} events/sample · {method_label}"
+            return figure, None, annotation
         except Exception:
             raise PreventUpdate
 
